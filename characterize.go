@@ -33,9 +33,7 @@
 // Package characterize is a port of the text detection algorithm used by the file command
 package characterize
 
-import (
-	"io"
-)
+import "io"
 
 // SniffSz sets the maximum bytes scanned by Detect()
 var SniffSz = 4096
