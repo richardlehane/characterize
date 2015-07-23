@@ -35,6 +35,49 @@ package characterize
 
 import "io"
 
+// CharType is the type of character encoding
+type CharType byte
+
+const (
+	ASCII     CharType = iota // ASCII text
+	UTF7                      // UTF-7 Unicode
+	UTF8BOM                   // UTF-8 Unicode (with BOM)
+	UTF8                      // UTF-8 Unicode
+	UTF16LE                   // Little-endian UTF-16 Unicode
+	UTF16BE                   // Big-endian UTF-16 Unicode
+	LATIN1                    // ISO-8859
+	EXTENDED                  // Non-ISO extended-ASCII
+	EBCDIC                    // EBCDIC
+	EBCDICINT                 // International EBCDIC
+	DATA                      // Binary data
+)
+
+func (c CharType) String() string {
+	switch c {
+	case ASCII:
+		return "ASCII"
+	case UTF7:
+		return "UTF-7 Unicode"
+	case UTF8BOM:
+		return "UTF-8 Unicode (with BOM)"
+	case UTF8:
+		return "UTF-8 Unicode"
+	case UTF16LE:
+		return "Little-endian UTF-16 Unicode"
+	case UTF16BE:
+		return "Big-endian UTF-16 Unicode"
+	case LATIN1:
+		return "ISO-8859"
+	case EXTENDED:
+		return "Non-ISO extended-ASCII"
+	case EBCDIC:
+		return "EBCDIC"
+	case EBCDICINT:
+		return "International EBCDIC"
+	}
+	return "Binary data"
+}
+
 // SniffSz sets the maximum bytes scanned by Detect()
 var SniffSz = 4096
 
@@ -97,49 +140,6 @@ func detect(buf []byte) CharType {
 		return EBCDIC
 	}
 	return DATA
-}
-
-// CharType is the type of character encoding
-type CharType byte
-
-const (
-	ASCII     CharType = iota // ASCII text
-	UTF7                      // UTF-7 Unicode
-	UTF8BOM                   // UTF-8 Unicode (with BOM)
-	UTF8                      // UTF-8 Unicode
-	UTF16LE                   // Little-endian UTF-16 Unicode
-	UTF16BE                   // Big-endian UTF-16 Unicode
-	LATIN1                    // ISO-8859
-	EXTENDED                  // Non-ISO extended-ASCII
-	EBCDIC                    // EBCDIC
-	EBCDICINT                 // International EBCDIC
-	DATA                      // Binary data
-)
-
-func (c CharType) String() string {
-	switch c {
-	case ASCII:
-		return "ASCII"
-	case UTF7:
-		return "UTF-7 Unicode"
-	case UTF8BOM:
-		return "UTF-8 Unicode (with BOM)"
-	case UTF8:
-		return "UTF-8 Unicode"
-	case UTF16LE:
-		return "Little-endian UTF-16 Unicode"
-	case UTF16BE:
-		return "Big-endian UTF-16 Unicode"
-	case LATIN1:
-		return "ISO-8859"
-	case EXTENDED:
-		return "Non-ISO extended-ASCII"
-	case EBCDIC:
-		return "EBCDIC"
-	case EBCDICINT:
-		return "International EBCDIC"
-	}
-	return "Binary data"
 }
 
 type textType byte
