@@ -1,4 +1,4 @@
-package characterise
+package characterize
 
 import (
 	"io"
