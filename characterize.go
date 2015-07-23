@@ -1,53 +1,60 @@
-// Copyright 2015 Richard Lehane. All rights reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Golang port of encoding.c from the file command
+// https://github.com/file/file/blob/master/src/encoding.c
+// Original copyright notice:
 
-// Package characterize is a port of https://github.com/file/file/blob/master/src/encoding.c
+/*
+ * Copyright (c) Ian F. Darwin 1986-1995.
+ * Software written by Ian F. Darwin and others;
+ * maintained 1995-present by Christos Zoulas and others.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice immediately at the beginning of the file, without modification,
+ *    this list of conditions, and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+// Package characterize is a port of the text detection algorithm used by the file command
 package characterize
 
 import (
 	"io"
 )
 
-const sniffSz = 4096
+// SniffSz sets the maximum bytes scanned by Detect()
+var SniffSz = 4096
 
-func ToUTF8(s string) string {
-	c := detect([]byte(s))
-	switch c {
-	case ASCII, UTF8:
-		return s
-	case UTF7:
-		return s[4:]
-	case UTF8BOM:
-		return s[3:]
-	}
-	return s
-}
-
+// Detect reads SniffSz bytes and returns the character encoding (DATA if unknown)
 func Detect(r io.Reader) CharType {
 	var buf []byte
 	slc, ok := r.(slicer)
 	if !ok {
-		buf = make([]byte, sniffSz)
+		buf = make([]byte, SniffSz)
 		l, _ := r.Read(buf)
 		buf = buf[:l]
 	} else {
-		buf, _ = slc.Slice(0, sniffSz)
+		buf, _ = slc.Slice(0, SniffSz)
 	}
 	return detect(buf)
 }
 
-// Slicer interface avoids a copy by getting a byte slice directly from the underlying reader
+// slicer interface avoids a copy by getting a byte slice directly from the underlying reader
 type slicer interface {
 	Slice(offset int64, length int) ([]byte, error)
 }
@@ -91,23 +98,24 @@ func detect(buf []byte) CharType {
 		}
 		return EBCDIC
 	}
-	return Binary
+	return DATA
 }
 
+// CharType is the type of character encoding
 type CharType byte
 
 const (
-	Binary CharType = iota
-	ASCII
-	UTF7
-	UTF8BOM
-	UTF8
-	UTF16LE
-	UTF16BE
-	LATIN1
-	EXTENDED
-	EBCDIC
-	EBCDICINT
+	ASCII     CharType = iota // ASCII text
+	UTF7                      // UTF-7 Unicode
+	UTF8BOM                   // UTF-8 Unicode (with BOM)
+	UTF8                      // UTF-8 Unicode
+	UTF16LE                   // Little-endian UTF-16 Unicode
+	UTF16BE                   // Big-endian UTF-16 Unicode
+	LATIN1                    // ISO-8859
+	EXTENDED                  // Non-ISO extended-ASCII
+	EBCDIC                    // EBCDIC
+	EBCDICINT                 // International EBCDIC
+	DATA                      // Binary data
 )
 
 func (c CharType) String() string {
@@ -133,7 +141,7 @@ func (c CharType) String() string {
 	case EBCDICINT:
 		return "International EBCDIC"
 	}
-	return "binary"
+	return "Binary data"
 }
 
 type textType byte
@@ -147,22 +155,22 @@ const (
 )
 
 var textChars = [256]textType{
-	_n, _n, _n, _n, _n, _n, _n, _a, _a, _a, _a, _a, _a, _a, _n, _n, /* 0x0X */
-	_n, _n, _n, _n, _n, _n, _n, _n, _n, _n, _n, _a, _n, _n, _n, _n, /* 0x1X */
-	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, /* 0x2X */
-	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, /* 0x3X */
-	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, /* 0x4X */
-	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, /* 0x5X */
-	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, /* 0x6X */
-	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _n, /* 0x7X */
-	_e, _e, _e, _e, _e, _a, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, /* 0x8X */
-	_e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, /* 0x9X */
-	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, /* 0xaX */
-	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, /* 0xbX */
-	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, /* 0xcX */
-	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, /* 0xdX */
-	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, /* 0xeX */
-	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, /* 0xfX */
+	_n, _n, _n, _n, _n, _n, _n, _a, _a, _a, _a, _a, _a, _a, _n, _n,
+	_n, _n, _n, _n, _n, _n, _n, _n, _n, _n, _n, _a, _n, _n, _n, _n,
+	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a,
+	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a,
+	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a,
+	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a,
+	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a,
+	_a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _a, _n,
+	_e, _e, _e, _e, _e, _a, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e,
+	_e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e, _e,
+	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i,
+	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i,
+	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i,
+	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i,
+	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i,
+	_i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i, _i,
 }
 
 func detectText(r []byte) textType {
@@ -267,7 +275,7 @@ func detectUTF16(r []byte) (bool, bool) {
 	return true, big
 }
 
-var ebcdicAscii = [256]byte{
+var ebcdicASCII = [256]byte{
 	0, 1, 2, 3, 156, 9, 134, 127, 151, 141, 142, 11, 12, 13, 14, 15,
 	16, 17, 18, 19, 157, 133, 8, 135, 24, 25, 146, 143, 28, 29, 30, 31,
 	128, 129, 130, 131, 132, 10, 23, 27, 136, 137, 138, 139, 140, 5, 6, 7,
@@ -289,7 +297,7 @@ var ebcdicAscii = [256]byte{
 func detectEBCDIC(r []byte) (bool, bool) {
 	var international bool
 	for _, b := range r {
-		switch textChars[ebcdicAscii[b]] {
+		switch textChars[ebcdicASCII[b]] {
 		case _n, _e:
 			return false, false
 		case _i:
@@ -298,5 +306,3 @@ func detectEBCDIC(r []byte) (bool, bool) {
 	}
 	return true, international
 }
-
-// Next up: https://github.com/apache/tika/blob/trunk/tika-parsers/src/main/java/org/apache/tika/parser/txt/CharsetRecog_sbcs.java //
