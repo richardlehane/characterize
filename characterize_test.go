@@ -1,8 +1,10 @@
 package characterize
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
+	"unicode/utf8"
 )
 
 type item struct {
@@ -30,5 +32,20 @@ func TestDetect(t *testing.T) {
 		if det != v.expect {
 			t.Errorf("failed to detect %s: expecting %s, got %s", v.name, v.expect, det)
 		}
+	}
+}
+
+func TestZipName(t *testing.T) {
+	file, err := os.Open("examples/twilight.txt")
+	if err != nil {
+		t.Fatalf("failed to open twilight.txt, got: %v", err)
+	}
+	buf, err := ioutil.ReadAll(file)
+	if err != nil {
+		t.Fatalf("error reading file, got %v", err)
+	}
+	nm := ZipName(string(buf))
+	if !utf8.Valid([]byte(nm)) {
+		t.Fatalf("not valid: %s", nm)
 	}
 }
