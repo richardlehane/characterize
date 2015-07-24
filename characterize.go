@@ -1,7 +1,7 @@
+// Copyright 2015 Richard Lehane.
 // Golang port of encoding.c from the file command
 // https://github.com/file/file/blob/master/src/encoding.c
 // Original copyright notice:
-
 /*
  * Copyright (c) Ian F. Darwin 1986-1995.
  * Software written by Ian F. Darwin and others;
