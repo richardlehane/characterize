@@ -101,6 +101,9 @@ type slicer interface {
 }
 
 func detect(buf []byte) CharType {
+	if len(buf) == 0 { // don't report text for empty files
+		return DATA
+	}
 	ubom := utf8BOM(buf)
 	if ubom {
 		buf = buf[3:]
