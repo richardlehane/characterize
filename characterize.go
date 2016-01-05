@@ -33,7 +33,7 @@
 // Package characterize is a port of the text detection algorithm used by the file command
 package characterize
 
-// CharType is the type of character encoding
+// CharType is the character encoding reported by the file command
 type CharType byte
 
 const (
@@ -76,6 +76,8 @@ func (c CharType) String() string {
 	return "Binary data"
 }
 
+// Detect applies the file command's text detection algorithm to a byte slice.
+// Returns a CharType that is equivalent to the file command's text types.
 func Detect(buf []byte) CharType {
 	if len(buf) == 0 { // don't report text for empty slices
 		return DATA
