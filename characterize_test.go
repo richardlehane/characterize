@@ -2,7 +2,6 @@ package characterize
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 	"unicode/utf8"
 )
@@ -24,11 +23,11 @@ var suite = []item{
 
 func TestDetect(t *testing.T) {
 	for _, v := range suite {
-		file, err := os.Open(v.name)
+		buf, err := ioutil.ReadFile(v.name)
 		if err != nil {
 			t.Fatalf("failed to open %s, got: %v", v.name, err)
 		}
-		det := Detect(file)
+		det := Detect(buf)
 		if det != v.expect {
 			t.Errorf("failed to detect %s: expecting %s, got %s", v.name, v.expect, det)
 		}
@@ -36,13 +35,9 @@ func TestDetect(t *testing.T) {
 }
 
 func TestZipName(t *testing.T) {
-	file, err := os.Open("examples/twilight.txt")
+	buf, err := ioutil.ReadFile("examples/twilight.txt")
 	if err != nil {
 		t.Fatalf("failed to open twilight.txt, got: %v", err)
-	}
-	buf, err := ioutil.ReadAll(file)
-	if err != nil {
-		t.Fatalf("error reading file, got %v", err)
 	}
 	nm := ZipName(string(buf))
 	if !utf8.Valid([]byte(nm)) {

@@ -33,13 +33,12 @@
 // Package characterize is a port of the text detection algorithm used by the file command
 package characterize
 
-import "io"
-
 // CharType is the type of character encoding
 type CharType byte
 
 const (
-	ASCII     CharType = iota // ASCII text
+	DATA      CharType = iota // Binary data
+	ASCII                     // ASCII text
 	UTF7                      // UTF-7 Unicode
 	UTF8BOM                   // UTF-8 Unicode (with BOM)
 	UTF8                      // UTF-8 Unicode
@@ -49,7 +48,6 @@ const (
 	EXTENDED                  // Non-ISO extended-ASCII
 	EBCDIC                    // EBCDIC
 	EBCDICINT                 // International EBCDIC
-	DATA                      // Binary data
 )
 
 func (c CharType) String() string {
@@ -78,30 +76,8 @@ func (c CharType) String() string {
 	return "Binary data"
 }
 
-// SniffSz sets the maximum bytes scanned by Detect()
-var SniffSz = 4096
-
-// Detect reads SniffSz bytes and returns the character encoding (DATA if unknown)
-func Detect(r io.Reader) CharType {
-	var buf []byte
-	slc, ok := r.(slicer)
-	if !ok {
-		buf = make([]byte, SniffSz)
-		l, _ := r.Read(buf)
-		buf = buf[:l]
-	} else {
-		buf, _ = slc.Slice(0, SniffSz)
-	}
-	return detect(buf)
-}
-
-// slicer interface avoids a copy by getting a byte slice directly from the underlying reader
-type slicer interface {
-	Slice(offset int64, length int) ([]byte, error)
-}
-
-func detect(buf []byte) CharType {
-	if len(buf) == 0 { // don't report text for empty files
+func Detect(buf []byte) CharType {
+	if len(buf) == 0 { // don't report text for empty slices
 		return DATA
 	}
 	ubom := utf8BOM(buf)
