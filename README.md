@@ -1,7 +1,5 @@
 Detect text encoding. Ports the algorithm used by the `file` command. Includes a utility function to decode zip filenames.
 
-[![Build Status](https://travis-ci.org/richardlehane/characterize.png?branch=master)](https://travis-ci.org/richardlehane/characterize)
-
 Golang port of encoding.c from the file command
 
 https://github.com/file/file/blob/master/src/encoding.c
