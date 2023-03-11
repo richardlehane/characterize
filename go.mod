@@ -1,3 +1,5 @@
 module github.com/richardlehane/characterize
 
-require golang.org/x/text v0.3.0
+go 1.20
+
+require golang.org/x/text v0.8.0
