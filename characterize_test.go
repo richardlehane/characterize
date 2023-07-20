@@ -1,6 +1,7 @@
 package characterize
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 	"unicode/utf8"
@@ -19,6 +20,17 @@ var suite = []item{
 	{"examples/utf16le.txt", UTF16LE},
 	{"examples/ebcdic.txt", LATIN1},     // unfortunately my example ebdic file is latin1 too
 	{"examples/twilight.txt", EXTENDED}, // from twilight.zip
+}
+
+var thorsted = []byte{0x43, 0x48, 0x5F, 0x32, 0x2E, 0x70, 0x64, 0x66, 0x0A, 0xD0, 0xA1, 0x48, 0x5F, 0x33, 0x2E, 0x70, 0x64, 0x66, 0x0A}
+
+func ExampleUTF8() {
+	fmt.Print(string(thorsted))
+	fmt.Print(Detect(thorsted))
+	// Output:
+	// CH_2.pdf
+	// СH_3.pdf
+	// UTF-8 Unicode
 }
 
 func TestDetect(t *testing.T) {
